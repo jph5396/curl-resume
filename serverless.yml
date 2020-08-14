@@ -1,0 +1,57 @@
+
+
+service: curl-resume
+frameworkVersion: '>=1.28.0 <2.0.0'
+
+provider:
+  name: aws
+  runtime: go1.x
+  iamManagedPolicies: 
+    - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+  logRetentionInDays: 5
+  logs: 
+    restApi:
+      level: INFO
+      fullExecutionData: true 
+  stackTags:
+    stack: curl-resume
+  environment: 
+    storageBucket: hackett-resume-bucket
+    baseKey: curl-resume/
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  resume: 
+    handler: bin/resume
+    events: 
+      - http:
+          path: /
+          method: get
+          cors: true
+      - http:
+          path: /{item}
+          method: get 
+          request:
+            parameters:
+              paths: 
+                item: true
+      - http: 
+          path: /{item}/{proxy+}
+          method: any 
+  
+plugins:
+  - serverless-domain-manager
+
+custom: 
+  customDomain: 
+    domainName: resume.joehackett.info
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+
+
