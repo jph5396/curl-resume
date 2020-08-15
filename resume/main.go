@@ -29,6 +29,13 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 	var bodyBuilder strings.Builder
 	var statusCode int
 
+	// check if user agent is not curl. If it isn't append a note at the beginning
+	// to let the client know this was designed to be used via curl..
+	if !strings.Contains(request.RequestContext.Identity.UserAgent, "curl") {
+		fmt.Print("User Agent is: ", request.RequestContext.Identity.UserAgent)
+		bodyBuilder.WriteString("Note: these endpoints were designed to be used with curl. They may not appear as intended when accessed via other methods. \n")
+	}
+
 	// If the path is "/" and there is not an item in path parameters
 	if request.Path == "/" {
 		requestedItem, err := GetItem("resume")
