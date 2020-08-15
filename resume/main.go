@@ -77,7 +77,6 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 		return HandleNoSuchItemError(request.Path), nil
 	}
 
-	fmt.Print("body builder: ", bodyBuilder.String())
 	response := Response{
 		StatusCode:      statusCode,
 		IsBase64Encoded: false,

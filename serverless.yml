@@ -11,8 +11,7 @@ provider:
   logRetentionInDays: 5
   logs: 
     restApi:
-      level: INFO
-      fullExecutionData: true 
+      level: ERROR 
   stackTags:
     stack: curl-resume
   environment: 
