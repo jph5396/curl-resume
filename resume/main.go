@@ -43,6 +43,15 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 			return HandleGeneralErr(err), nil
 		}
 		bodyBuilder.WriteString(requestedItem.Body)
+		endPoints, err := ListAvailableEndPoints()
+		bodyBuilder.WriteString("\n")
+		if err == nil {
+			bodyBuilder.WriteString(endPoints)
+		} else {
+			fmt.Print("error attempting to list available endpoints")
+			bodyBuilder.WriteString("Error attempting to get endpoints. Please try again later")
+		}
+
 		statusCode = 200
 
 		// if item is requested, return that specific item.

@@ -24,3 +24,5 @@ vendor
 node_modules/
 package-lock.json
 
+#ignore ResumeTxtFiles folder contents. 
+ResumeTxtFiles/
