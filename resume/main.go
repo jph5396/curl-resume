@@ -191,7 +191,20 @@ func ListAvailableEndPoints() (string, error) {
 	}
 
 	for _, obj := range listOfObj.Contents {
-		responseBuilder.WriteString(fmt.Sprint(aws.StringValue(obj.Key), "\n"))
+
+		objectKey := aws.StringValue(obj.Key)
+
+		// ListObjects will include the basekey as an item in the list.
+		// since we do not want this to be returned, we skip to the
+		// next iteration in the loop when the object key and base key are equal.
+		if os.Getenv("baseKey") == objectKey {
+			continue
+		}
+
+		//remove baseKey and .txt
+		noBaseKey := strings.ReplaceAll(objectKey, os.Getenv("baseKey"), "")
+		noTxt := strings.ReplaceAll(noBaseKey, ".txt", "")
+		responseBuilder.WriteString(fmt.Sprint("/", noTxt, "\n"))
 	}
 
 	return responseBuilder.String(), nil
