@@ -1,4 +1,4 @@
-# curl Resume
+# curl-resume
 ```bash 
 curl https://resume.joehackett.info 
 ```
