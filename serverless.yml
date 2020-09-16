@@ -7,7 +7,7 @@ provider:
   name: aws
   runtime: go1.x
   iamManagedPolicies: 
-    - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+    - arn:aws:iam::aws:policy/AmazonS3FullAccess
   logRetentionInDays: 5
   logs: 
     restApi:
@@ -17,6 +17,7 @@ provider:
   environment: 
     storageBucket: hackett-resume-bucket
     baseKey: curl-resume/
+    endPoints: endpoints.txt
 
 package:
   exclude:
@@ -41,8 +42,22 @@ functions:
                 item: true
       - http: 
           path: /{item}/{proxy+}
-          method: any 
-  
+          method: any
+  bucket_manager: 
+    handler: bin/bucket_manager
+    events:
+      - s3:
+          event: s3:ObjectCreated:*
+          bucket: ${self:provider.environment.storageBucket}
+          rules:
+            - prefix: ${self:provider.environment.baseKey}
+          existing: true
+      - s3:
+          event: s3:ObjectRemoved:*
+          bucket: ${self:provider.environment.storageBucket}
+          rules:
+            - prefix: ${self:provider.environment.baseKey}
+          existing: true
 plugins:
   - serverless-domain-manager
 
