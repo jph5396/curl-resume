@@ -38,7 +38,7 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 
 	// If the path is "/" and there is not an item in path parameters
 	if request.Path == "/" {
-		requestedItem, err := GetItem("resume")
+		requestedItem, err := GetItem(fmt.Sprintf("%s/%s.txt", os.Getenv("baseKey"), "resume"))
 		if err != nil {
 			return HandleGeneralErr(err), nil
 		}
@@ -57,7 +57,7 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 		// if item is requested, return that specific item.
 	} else if value, present := request.PathParameters["item"]; present && request.RequestContext.ResourcePath == "/{item}" {
 
-		requestedItem, err := GetItem(value)
+		requestedItem, err := GetItem(fmt.Sprintf("%s/%s.txt", os.Getenv("baseKey"), value))
 		if err != nil {
 			fmt.Print("failed when trying to get ", value)
 
@@ -91,6 +91,7 @@ func Handler(request events.APIGatewayProxyRequest) (Response, error) {
 }
 
 // GetItem read the desired item from s3 and return its contents as a string
+// the item parameter should represent the object key.
 func GetItem(item string) (GetItemOutput, error) {
 
 	fmt.Print("I am attempting to get an item")
@@ -104,10 +105,11 @@ func GetItem(item string) (GetItemOutput, error) {
 			Body:       "",
 		}, err
 	}
+
 	s3Client := s3.New(sess)
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(os.Getenv("storageBucket")),
-		Key:    aws.String(fmt.Sprintf("%s/%s.txt", os.Getenv("baseKey"), item)),
+		Key:    aws.String(item),
 	}
 
 	// try to get object
@@ -185,37 +187,12 @@ func HandleNoSuchItemError(item string) Response {
 
 // ListAvailableEndPoints loops through bucket to see what items are available
 func ListAvailableEndPoints() (string, error) {
-	var responseBuilder strings.Builder
-	responseBuilder.WriteString("The following endpoints are available: \n")
-
-	s3Client := s3.New(session.New())
-	input := &s3.ListObjectsInput{
-		Bucket: aws.String(os.Getenv("storageBucket")),
-		Prefix: aws.String(os.Getenv("baseKey")),
-	}
-	listOfObj, err := s3Client.ListObjects(input)
+	availableEndpoints, err := GetItem(os.Getenv("endPoints"))
 	if err != nil {
 		return "", err
 	}
 
-	for _, obj := range listOfObj.Contents {
-
-		objectKey := aws.StringValue(obj.Key)
-
-		// ListObjects will include the basekey as an item in the list.
-		// since we do not want this to be returned, we skip to the
-		// next iteration in the loop when the object key and base key are equal.
-		if os.Getenv("baseKey") == objectKey {
-			continue
-		}
-
-		//remove baseKey and .txt
-		noBaseKey := strings.ReplaceAll(objectKey, os.Getenv("baseKey"), "")
-		noTxt := strings.ReplaceAll(noBaseKey, ".txt", "")
-		responseBuilder.WriteString(fmt.Sprint("/", noTxt, "\n"))
-	}
-
-	return responseBuilder.String(), nil
+	return availableEndpoints.Body, nil
 }
 
 func main() {
